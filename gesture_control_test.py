@@ -1,10 +1,4 @@
-# import pyautogui
-
-# # Perform a right-click action
-# pyautogui.mouseDown(button='right')
-# pyautogui.mouseUp(button='right')
-
-import cv2 #Smooth gesture control (attempting to implement)
+import cv2 #current working
 import mediapipe as mp
 import pyautogui
 from filterpy.kalman import KalmanFilter
@@ -30,32 +24,38 @@ n = 1  # Process every frame for smoother movement
 kf = KalmanFilter(dim_x=4, dim_z=2)
 kf.x = np.array([0, 0, 0, 0])  # initial state (location and velocity)
 kf.F = np.array([[1, 0, 1, 0],  # state transition matrix
-                    [0, 1, 0, 1],
-                    [0, 0, 1, 0],
-                    [0, 0, 0, 1]])
+                 [0, 1, 0, 1],
+                 [0, 0, 1, 0],
+                 [0, 0, 0, 1]])
 kf.H = np.array([[1, 0, 0, 0],  # measurement function
-                    [0, 1, 0, 0]])
+                 [0, 1, 0, 0]])
 kf.P *= 1000  # covariance matrix
-kf.R = np.array([[0.3, 0],  # measurement noise
-                    [0, 0.3]])
-kf.Q = np.array([[0.005, 0, 0, 0],  # process noise
-                    [0, 0.005, 0, 0],
-                    [0, 0, 0.005, 0],
-                    [0, 0, 0, 0.005]])
+kf.R = np.array([[0.05, 0],  # Lower measurement noise for more precision
+                 [0, 0.05]])
+kf.Q = np.array([[0.001, 0, 0, 0],  # Lower process noise
+                 [0, 0.001, 0, 0],
+                 [0, 0, 0.001, 0],
+                 [0, 0, 0, 0.001]])
 
 # To measure the processing frame rate
 prev_time = 0
-fps = 60  # Target frame rate for higher responsiveness
+fps = 120  # Target frame rate for higher responsiveness
 
 # Initialize previous smoothed positions for interpolation
 prev_smoothed_x, prev_smoothed_y = pyautogui.position()
 
 # Scaling factor for movement amplification
-scaling_factor = 2.1  # Adjust this factor to control sensitivity
+base_scaling_factor = 1.6  # Adjust this factor to control sensitivity
 
 # State variables to track the click states
 left_click_pressed = False
 right_click_pressed = False
+
+# Initialize previous positions for low-pass filter
+prev_filtered_x, prev_filtered_y = pyautogui.position()
+
+# Low-pass filter factor
+low_pass_factor = 0.15  # Increase smoothing
 
 # Function to check if the thumb and index finger are touching
 def is_thumb_index_touching(landmarks, threshold=0.099):
@@ -70,6 +70,28 @@ def is_thumb_middle_touching(landmarks, threshold=0.099):
     middle_tip = landmarks[12]
     distance = np.linalg.norm(np.array([thumb_tip.x, thumb_tip.y]) - np.array([middle_tip.x, middle_tip.y]))
     return distance < threshold  # Adjust the threshold as needed
+
+# Function to normalize hand position
+def normalize_coordinates(x, y, image_width, image_height):
+    norm_x = x / image_width
+    norm_y = y / image_height
+    return norm_x, norm_y
+
+# Function to calculate dynamic scaling factor based on velocity
+def calculate_scaling_factor(velocity, base_factor=2.1):
+    # Scale factor inversely proportional to velocity for smoother movements
+    dynamic_factor = base_factor * (1 / (1 + velocity))
+    return dynamic_factor
+
+# Function to calculate velocity
+def calculate_velocity(prev_x, prev_y, curr_x, curr_y, elapsed_time):
+    distance = np.sqrt((curr_x - prev_x)**2 + (curr_y - prev_y)**2)
+    velocity = distance / elapsed_time if elapsed_time > 0 else 0
+    return velocity
+
+# Initialize previous coordinates and time for velocity calculation
+prev_x, prev_y = prev_smoothed_x, prev_smoothed_y
+prev_time_for_velocity = time.time()
 
 while cap.isOpened():
     ret, frame = cap.read()
@@ -99,9 +121,21 @@ while cap.isOpened():
             target_x = int((1 - index_finger_tip.x) * screen_width)  # Invert the X coordinate
             target_y = int(index_finger_tip.y * screen_height)
 
-            # Apply scaling to the movements
-            scaled_x = target_x * scaling_factor
-            scaled_y = target_y * scaling_factor
+            # Normalize the coordinates
+            norm_x, norm_y = normalize_coordinates(target_x, target_y, screen_width, screen_height)
+
+            # Calculate velocity
+            curr_time_for_velocity = time.time()
+            velocity = calculate_velocity(prev_x, prev_y, norm_x, norm_y, curr_time_for_velocity - prev_time_for_velocity)
+            prev_x, prev_y = norm_x, norm_y
+            prev_time_for_velocity = curr_time_for_velocity
+
+            # Calculate dynamic scaling factor based on velocity
+            dynamic_scaling_factor = calculate_scaling_factor(velocity, base_scaling_factor)
+
+            # Apply dynamic scaling to the movements
+            scaled_x = target_x * dynamic_scaling_factor
+            scaled_y = target_y * dynamic_scaling_factor
 
             # Update the Kalman filter with the new measurements
             kf.predict()
@@ -111,15 +145,20 @@ while cap.isOpened():
             smoothed_x, smoothed_y = kf.x[:2]
 
             # Exponential moving average for smoother transition
-            alpha = 0.4  # Smoothing factor, can be adjusted for smoothness
+            alpha = 0.6  # Higher smoothing factor, can be adjusted for more smoothness
             final_x = alpha * smoothed_x + (1 - alpha) * prev_smoothed_x
             final_y = alpha * smoothed_y + (1 - alpha) * prev_smoothed_y
 
-            # Move the cursor to the interpolated position
-            pyautogui.moveTo(int(final_x), int(final_y))
+            # Apply the low-pass filter
+            filtered_x = low_pass_factor * final_x + (1 - low_pass_factor) * prev_filtered_x
+            filtered_y = low_pass_factor * final_y + (1 - low_pass_factor) * prev_filtered_y
+
+            # Move the cursor to the filtered position
+            pyautogui.moveTo(int(filtered_x), int(filtered_y))
 
             # Update previous smoothed positions
             prev_smoothed_x, prev_smoothed_y = final_x, final_y
+            prev_filtered_x, prev_filtered_y = filtered_x, filtered_y
 
             # Check for left-click gesture (thumb and index finger touching)
             if is_thumb_index_touching(hand_landmarks.landmark):
@@ -151,4 +190,3 @@ while cap.isOpened():
 
 cap.release()
 cv2.destroyAllWindows()
-
