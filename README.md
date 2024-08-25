@@ -2,9 +2,9 @@
 
 https://github.com/user-attachments/assets/48d37b46-a3da-4bed-9b96-32418d217977
 
-## What is Swype?
+## What is Swype AI?
 
-Swype is an innovative assistive technology system designed to empower individuals with motor disabilities by allowing them to control their computers through natural hand gestures and voice commands. In less than 3 months, we transformed Swype from a simple idea into a fully functional product.
+Swype AI is an innovative assistive technology system designed to empower individuals with motor disabilities by allowing them to control their computers through natural hand gestures and voice commands. In less than 3 months, we transformed Swype from a simple idea into a fully functional product.
 
 ### Key Achievements
 
