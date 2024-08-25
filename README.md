@@ -21,11 +21,14 @@ Swype is an innovative assistive technology system designed to empower individua
 
 ## Files and Descriptions
 
-### `fist_audio_test.py`
-**Description:** This script allows you to activate audio by making a fist with your hand for 3 seconds. Once activated, it continues to analyze speech and convert it to text until no audio is registered for 10 seconds. Additionally, saying "Search" will automatically navigate to the search bar.
-
 ### `gesture_control_test.py`
 **Description:** This script enables cursor control using hand gestures. The cursor is controlled by the movement of the pointer finger of either hand. Right-click is performed by touching the pointer finger and thumb together, and left-click is performed by touching the middle finger and thumb together.
+
+### `voice_control_test.py`
+**Description:** This script acts as an AI voice assistant, allowing you to control various computer functions using voice commands. It can execute tasks such as navigating between tabs, controlling media playback, adjusting volume, copying and pasting text, and more. The assistant provides real-time feedback after executing each command and can be easily activated by speaking predefined commands.
+
+### `fist_audio_test.py`
+**Description:** This script allows you to activate audio by making a fist with your hand for 3 seconds. Once activated, it continues to analyze speech and convert it to text until no audio is registered for 10 seconds. Additionally, saying "Search" will automatically navigate to the search bar.
 
 ### `zoom_test.py`
 **Description:** This script allows zooming in and out using hand gestures. Moving the thumbs on both hands farther apart zooms out, while moving the thumbs closer together zooms in.
