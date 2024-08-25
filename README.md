@@ -1,6 +1,6 @@
 ![Swypeimage](https://github.com/user-attachments/assets/71f617cb-92d1-4f8e-99bc-d87a841dbb8c)
 
-https://github.com/user-attachments/assets/30ffad56-9e8b-4903-8415-21355a543621
+https://github.com/user-attachments/assets/48d37b46-a3da-4bed-9b96-32418d217977
 
 ## What is Swype?
 
