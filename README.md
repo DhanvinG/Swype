@@ -1,5 +1,7 @@
 ![Swypeimage](https://github.com/user-attachments/assets/71f617cb-92d1-4f8e-99bc-d87a841dbb8c)
 
+https://github.com/user-attachments/assets/30ffad56-9e8b-4903-8415-21355a543621
+
 ## What is Swype?
 
 Swype is an innovative assistive technology system designed to empower individuals with motor disabilities by allowing them to control their computers through natural hand gestures and voice commands. In less than 3 months, we transformed Swype from a simple idea into a fully functional product.
